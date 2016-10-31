@@ -57,11 +57,10 @@ pretty_print_alert(Alert)->
     Header = Alert#alert.header_text,
     Description = Alert#alert.description_text,
     AlertText = io_lib:format(
-        "Alert! ~p. Cause: ~p. Effect: ~p.~n~p~n",
+        "Alert! ~s. Cause: ~s.~n~s~n",
         [
             get_translation(Header, "en"),
             Alert#alert.cause,
-            Alert#alert.effect,
             get_translation(Description, "en")
         ]
     ),
