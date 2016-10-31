@@ -1,0 +1,18 @@
+{application, mbta,
+ [
+  {description, "Workout tracking server"},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  sasl,
+                  jsx,
+                  lager,
+                  protobuffs,
+                  inets,
+                  pgapp
+                 ]},
+  {mod, { mbta_app, []}},
+  {env, []}
+ ]}.
