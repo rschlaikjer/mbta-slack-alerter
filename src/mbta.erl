@@ -56,10 +56,13 @@ get_translation(#translatedstring{translation=Translations}, Language) ->
 pretty_print_alert(Alert)->
     Header = Alert#alert.header_text,
     Description = Alert#alert.description_text,
+    Timerange = hd(Alert#alert.active_period),
+    lager:info("Timerange: ~p~n", [Timerange]),
     AlertText = io_lib:format(
-        "Alert! ~s. Cause: ~s.~n~s~n",
+        "Alert! ~s until ~s. Cause: ~s.~n~s~n",
         [
             get_translation(Header, "en"),
+            format_time(unix_seconds_to_datetime(Timerange#timerange.'end')),
             Alert#alert.cause,
             get_translation(Description, "en")
         ]
@@ -67,6 +70,12 @@ pretty_print_alert(Alert)->
     io:format(AlertText),
     AlertText.
 
+
+unix_seconds_to_datetime(Seconds) ->
+    calendar:gregorian_seconds_to_datetime(Seconds + 62167219200).
+
+format_time({{Y, M, D}, {H, Mi, S}}) ->
+    io_lib:format("~2..0b:~2..0b:~2..0b ~b/~2..0b/~2..0b", [H, Mi, S, Y, M, D]).
 
 fetch_mbta_alert_protobuf() ->
     {ok, {{HttpVer, Code, Msg}, Headers, Body}} =
