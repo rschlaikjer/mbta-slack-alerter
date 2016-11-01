@@ -87,6 +87,9 @@ alert_affects_route_id(Alert, RouteId) ->
     ).
 
 send_alert(Color, Alert) ->
+    {ok, Channel} = application:get_env(mbta, slack_channel),
+    {ok, BotName} = application:get_env(mbta, slack_bot_name),
+    {ok, BotIcon} = application:get_env(mbta, slack_bot_icon),
     Attachment = attachment_for_alert(Color, Alert),
     slack_alert(
         <<"ross-slack-test">>,

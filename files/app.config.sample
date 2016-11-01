@@ -10,6 +10,9 @@
          ]
     },
     {mbta, [
+        {slack_channel, <<"mbta-spam">>},
+        {slack_bot_name, <<"MBTA Bot">>},
+        {slack_bot_icon, <<":mbta:">>},
         {slack_url, "YOUR_SLACK_WEBHOOK_URL"}
     ]}
 ].
