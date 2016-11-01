@@ -6,6 +6,8 @@
 -export([
     fetch_mbta_alerts/0,
     compile_protobuf/0,
+    start_line/1,
+    alert_affects_route_id/2,
     fetch_alerts_for_line/1,
     pretty_print_alert/1
 ]).
@@ -19,6 +21,9 @@ compile_protobuf() ->
             "gtfs_realtime.proto"
         ])
     ).
+
+start_line(Line) ->
+    supervisor:start_child(mbta_line_sup, [Line]).
 
 fetch_mbta_alerts() ->
     MbtaData = fetch_mbta_alert_protobuf(),
