@@ -4,7 +4,7 @@
 -include_lib("mbta/include/gtfs_realtime_pb.hrl").
 
 -define(MBTA_ALERT_URL, "http://developer.mbta.com/lib/GTRTFS/Alerts/Alerts.pb").
--define(HEARTBEAT_MILLIS, 10000).
+-define(HEARTBEAT_MILLIS, 600000).
 
 %% gen_server callbacks
 -export([init/1,
