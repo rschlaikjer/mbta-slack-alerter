@@ -3,7 +3,9 @@
 -include_lib("mbta/include/gtfs_realtime_pb.hrl").
 -compile([{parse_transform, lager_transform}]).
 
--export([start_link/1]).
+-export([
+    start_link/2
+]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -16,17 +18,15 @@
 -define(WATCHER_HEARTBEAT, 10000).
 -define(TIMEOUT, 30000).
 
--record(state, {line, ets}).
+-record(state, {line, color, ets}).
 
-start_link(Line) when is_binary(Line) ->
-    start_link(erlang:binary_to_list(Line));
-start_link(Line) when is_list(Line) ->
-    gen_server:start_link(?MODULE, [Line], []).
+start_link(Line, Color) when is_list(Line) ->
+    gen_server:start_link(?MODULE, [Line, Color], []).
 
-init([Line]) ->
+init([Line, Color]) ->
     lager:info("Started line alerter for the ~p line~n", [Line]),
     Ets = init_ets(),
-    {ok, #state{ets=Ets, line=Line}}.
+    {ok, #state{ets=Ets, line=Line, color=Color}}.
 
 handle_call(Request, From, State) ->
     lager:info("Call ~p From ~p", [Request, From]),
@@ -64,20 +64,19 @@ feed_entity_acked(Ets, #feedentity{id=Id}) ->
         _ -> true
     end.
 
-
-handle_feed_entity(#state{line=Line, ets=Ets}, FeedEntity) ->
+handle_feed_entity(#state{line=Line, ets=Ets, color=Color}, FeedEntity) ->
     case feed_entity_acked(Ets, FeedEntity) of
         true -> ok;
         false ->
             ack_feedentity(Ets, FeedEntity),
-            check_and_alert(Line, FeedEntity)
+            check_and_alert(Line, Color, FeedEntity)
     end.
 
-check_and_alert(Line, FeedEntity) ->
+check_and_alert(Line, Color, FeedEntity) ->
     Alert = FeedEntity#feedentity.alert,
     case alert_affects_route_id(Alert, Line) of
         false -> ok;
-        true -> send_alert(Alert)
+        true -> send_alert(Color, Alert)
     end.
 
 alert_affects_route_id(Alert, RouteId) ->
@@ -87,7 +86,72 @@ alert_affects_route_id(Alert, RouteId) ->
         Entities
     ).
 
-send_alert(Alert) ->
-    AlertText = mbta:pretty_print_alert(Alert),
-    io:format(AlertText),
+send_alert(Color, Alert) ->
+    Attachment = attachment_for_alert(Color, Alert),
+    slack_alert(
+        <<"ross-slack-test">>,
+        <<"MBTA Bot">>,
+        <<":mbta:">>,
+        Attachment
+    ),
     ok.
+
+attachment_for_alert(Color, Alert) ->
+    Header = Alert#alert.header_text,
+    Description = Alert#alert.description_text,
+    Timerange = hd(Alert#alert.active_period),
+    lager:info("Timerange end: ~p~n", [Timerange#timerange.'end']),
+    AlertText = io_lib:format(
+        "Alert! ~s until ~s. Cause: ~s.~n~s~n",
+        [
+            get_translation(Header, "en"),
+            format_time(unix_seconds_to_datetime(Timerange#timerange.'end')),
+            Alert#alert.cause,
+            get_translation(Description, "en")
+        ]
+    ),
+    [
+        {<<"fallback">>, erlang:list_to_binary(AlertText)},
+        {<<"color">>, Color},
+        {<<"title">>, erlang:list_to_binary(io_lib:format(
+            "Alert! ~s until ~s. Cause: ~s", [
+                get_translation(Header, "en"),
+                format_time(unix_seconds_to_datetime(Timerange#timerange.'end')),
+                Alert#alert.cause
+            ]))
+        },
+        {<<"text">>, erlang:list_to_binary(get_translation(Description, "en"))}
+    ].
+
+get_translation(#translatedstring{translation=Translations}, Language) ->
+    case lists:filter(
+        fun(Translation) -> Translation#translatedstring_translation.language == Language end,
+        Translations
+    ) of
+        [Translation] -> Translation#translatedstring_translation.text;
+        _ -> undefined
+    end.
+
+unix_seconds_to_datetime(Seconds) when is_integer(Seconds) ->
+    calendar:gregorian_seconds_to_datetime(Seconds + 62167219200);
+unix_seconds_to_datetime(_) -> undefined.
+
+format_time({{Y, M, D}, {H, Mi, S}}) ->
+    io_lib:format("~2..0b:~2..0b:~2..0b ~b/~2..0b/~2..0b", [H, Mi, S, Y, M, D]);
+format_time(_) ->
+    "further notice".
+
+slack_alert(Channel, Username, Emoji, Attachment) ->
+    Json = jsx:encode([
+        {<<"channel">>, Channel},
+        {<<"username">>, Username},
+        {<<"icon_emoji">>, Emoji},
+        {<<"attachments">>, [Attachment]}
+    ]),
+    lager:info(Json),
+    Header = [],
+    Type = "application/json",
+    {ok, SlackUrl} = application:get_env(mbta, slack_url),
+    {ok, {{HttpVer, Code, Msg}, ResponseHeaders, ResponseBody}} =
+        httpc:request(post, {SlackUrl, Header, Type, Json}, [], []),
+    erlang:iolist_to_binary(ResponseBody).

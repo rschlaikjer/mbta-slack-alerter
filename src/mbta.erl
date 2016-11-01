@@ -7,8 +7,7 @@
 %% Application callbacks
 -export([
     compile_protobuf/0,
-    start_line/1,
-    pretty_print_alert/1
+    start_line/2
 ]).
 
 compile_protobuf() ->
@@ -19,38 +18,5 @@ compile_protobuf() ->
         ])
     ).
 
-start_line(Line) ->
-    supervisor:start_child(mbta_line_sup, [Line]).
-
-get_translation(#translatedstring{translation=Translations}, Language) ->
-    case lists:filter(
-        fun(Translation) -> Translation#translatedstring_translation.language == Language end,
-        Translations
-    ) of
-        [Translation] -> Translation#translatedstring_translation.text;
-        _ -> undefined
-    end.
-
-pretty_print_alert(Alert)->
-    Header = Alert#alert.header_text,
-    Description = Alert#alert.description_text,
-    Timerange = hd(Alert#alert.active_period),
-    lager:info("Timerange: ~p~n", [Timerange]),
-    AlertText = io_lib:format(
-        "Alert! ~s until ~s. Cause: ~s.~n~s~n",
-        [
-            get_translation(Header, "en"),
-            format_time(unix_seconds_to_datetime(Timerange#timerange.'end')),
-            Alert#alert.cause,
-            get_translation(Description, "en")
-        ]
-    ),
-    io:format(AlertText),
-    AlertText.
-
-
-unix_seconds_to_datetime(Seconds) ->
-    calendar:gregorian_seconds_to_datetime(Seconds + 62167219200).
-
-format_time({{Y, M, D}, {H, Mi, S}}) ->
-    io_lib:format("~2..0b:~2..0b:~2..0b ~b/~2..0b/~2..0b", [H, Mi, S, Y, M, D]).
+start_line(Line, Color) ->
+    supervisor:start_child(mbta_line_sup, [Line, Color]).
