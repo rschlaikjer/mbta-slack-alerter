@@ -13,6 +13,15 @@
         {slack_channel, <<"mbta-spam">>},
         {slack_bot_name, <<"MBTA Bot">>},
         {slack_bot_icon, <<":mbta:">>},
-        {slack_url, "YOUR_SLACK_WEBHOOK_URL"}
+        {slack_url, "YOUR_SLACK_WEBHOOK_URL"},
+        {watched_lines, [
+            {"Red", <<"#E23139">>},
+            {"Green-B", <<"#019362">>},
+            {"Green-C", <<"#019362">>},
+            {"Green-D", <<"#019362">>},
+            {"Green-E", <<"#019362">>},
+            {"Blue", <<"#007FC5">>},
+            {"Orange", <<"#F7941D">>}
+        ]}
     ]}
 ].
