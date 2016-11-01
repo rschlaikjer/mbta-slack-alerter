@@ -7,3 +7,4 @@ deps
 _build/
 log/
 rebar.lock
+files/app.config

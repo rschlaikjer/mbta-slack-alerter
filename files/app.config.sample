@@ -8,6 +8,8 @@
                       {lager_file_backend, [{file, "mbta.info"}, {level, info}]}
                      ]}
          ]
-    }
+    },
+    {mbta, [
+        {slack_url, "YOUR_SLACK_WEBHOOK_URL"}
+    ]}
 ].
-
