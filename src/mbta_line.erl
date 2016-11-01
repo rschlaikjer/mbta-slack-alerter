@@ -103,7 +103,6 @@ attachment_for_alert(Color, Alert) ->
     Header = Alert#alert.header_text,
     Description = Alert#alert.description_text,
     Timerange = hd(Alert#alert.active_period),
-    lager:info("Timerange end: ~p~n", [Timerange#timerange.'end']),
     AlertText = io_lib:format(
         "Alert! ~s until ~s. Cause: ~s.~n~s~n",
         [
@@ -151,7 +150,6 @@ slack_alert(Channel, Username, Emoji, Attachment) ->
         {<<"icon_emoji">>, Emoji},
         {<<"attachments">>, [Attachment]}
     ]),
-    lager:info(Json),
     Header = [],
     Type = "application/json",
     {ok, SlackUrl} = application:get_env(mbta, slack_url),
