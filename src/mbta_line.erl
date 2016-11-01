@@ -152,6 +152,6 @@ slack_alert(Channel, Username, Emoji, Attachment) ->
     Header = [],
     Type = "application/json",
     {ok, SlackUrl} = application:get_env(mbta, slack_url),
-    {ok, {{HttpVer, Code, Msg}, ResponseHeaders, ResponseBody}} =
+    {ok, {{_HttpVer, _Code, _Msg}, _ResponseHeaders, ResponseBody}} =
         httpc:request(post, {SlackUrl, Header, Type, Json}, [], []),
     erlang:iolist_to_binary(ResponseBody).

@@ -72,7 +72,7 @@ fetch_mbta_alerts() ->
     ParsedData.
 
 fetch_mbta_alert_protobuf() ->
-    {ok, {{HttpVer, Code, Msg}, Headers, Body}} =
+    {ok, {{_HttpVer, _Code, _Msg}, _Headers, Body}} =
         httpc:request(get, {?MBTA_ALERT_URL, []}, [], []),
     erlang:iolist_to_binary(Body).
 
