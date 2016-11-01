@@ -12,7 +12,10 @@
 
 start(_StartType, _StartArgs) ->
     mbta:compile_protobuf(),
-    {ok, _} = mbta_sup:start_link().
+    {ok, Pid} = mbta_sup:start_link(),
+    mbta:start_line("Red"),
+    mbta:start_line("Green"),
+    {ok, Pid}.
 
 stop(_State) ->
     ok.

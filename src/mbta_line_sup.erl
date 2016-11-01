@@ -13,7 +13,6 @@ start_link() ->
 
 cast_entity_to_all(Entity=#feedentity{}) ->
     ChildPids = [Pid || {_, Pid, _, _} <- supervisor:which_children(mbta_line_sup)],
-    lager:info("Casting entity to ~p~n", [ChildPids]),
     lists:map(
         fun(ChildPid) -> gen_server:cast(ChildPid, {entity, Entity}) end,
         ChildPids

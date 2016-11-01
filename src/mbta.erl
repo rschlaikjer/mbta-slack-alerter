@@ -2,17 +2,14 @@
 -compile([{parse_transform, lager_transform}]).
 -include_lib("mbta/include/gtfs_realtime_pb.hrl").
 
+-define(MBTA_ALERT_URL, "http://developer.mbta.com/lib/GTRTFS/Alerts/Alerts.pb").
+
 %% Application callbacks
 -export([
-    fetch_mbta_alerts/0,
     compile_protobuf/0,
     start_line/1,
-    alert_affects_route_id/2,
-    fetch_alerts_for_line/1,
     pretty_print_alert/1
 ]).
-
--define(MBTA_ALERT_URL, "http://developer.mbta.com/lib/GTRTFS/Alerts/Alerts.pb").
 
 compile_protobuf() ->
     protobuffs_compile:scan_file(
@@ -24,30 +21,6 @@ compile_protobuf() ->
 
 start_line(Line) ->
     supervisor:start_child(mbta_line_sup, [Line]).
-
-fetch_mbta_alerts() ->
-    MbtaData = fetch_mbta_alert_protobuf(),
-    ParsedData = gtfs_realtime_pb:decode_feedmessage(MbtaData),
-    ParsedData.
-
-fetch_alerts_for_line(Line) ->
-    fetch_alerts_for_line(Line, fetch_mbta_alerts()).
-
-fetch_alerts_for_line(Line, FeedMessage) ->
-    Entities = FeedMessage#feedmessage.entity,
-    Alerts = [ Entity#feedentity.alert || Entity <- Entities ],
-    Relevant = lists:filter(
-        fun(Alert) -> alert_affects_route_id(Alert, Line) end,
-        Alerts
-    ),
-    Relevant.
-
-alert_affects_route_id(Alert, RouteId) ->
-    Entities = Alert#alert.informed_entity,
-    lists:any(
-        fun(Entity) -> Entity#entityselector.route_id == RouteId end,
-        Entities
-    ).
 
 get_translation(#translatedstring{translation=Translations}, Language) ->
     case lists:filter(
@@ -81,9 +54,3 @@ unix_seconds_to_datetime(Seconds) ->
 
 format_time({{Y, M, D}, {H, Mi, S}}) ->
     io_lib:format("~2..0b:~2..0b:~2..0b ~b/~2..0b/~2..0b", [H, Mi, S, Y, M, D]).
-
-fetch_mbta_alert_protobuf() ->
-    {ok, {{HttpVer, Code, Msg}, Headers, Body}} =
-        httpc:request(get, {?MBTA_ALERT_URL, []}, [], []),
-    erlang:iolist_to_binary(Body).
-

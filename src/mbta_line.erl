@@ -75,10 +75,17 @@ handle_feed_entity(#state{line=Line, ets=Ets}, FeedEntity) ->
 
 check_and_alert(Line, FeedEntity) ->
     Alert = FeedEntity#feedentity.alert,
-    case mbta:alert_affects_route_id(Alert, Line) of
+    case alert_affects_route_id(Alert, Line) of
         false -> ok;
         true -> send_alert(Alert)
     end.
+
+alert_affects_route_id(Alert, RouteId) ->
+    Entities = Alert#alert.informed_entity,
+    lists:any(
+        fun(Entity) -> Entity#entityselector.route_id == RouteId end,
+        Entities
+    ).
 
 send_alert(Alert) ->
     AlertText = mbta:pretty_print_alert(Alert),

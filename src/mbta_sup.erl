@@ -20,6 +20,14 @@ init([]) ->
         3000,
         supervisor,
         [mbta_line_sup]
+    },
+    {
+        mbta_poller,
+        {mbta_poller, start_link, []},
+        permanent,
+        3000,
+        worker,
+        [mbta_poller]
     }
     ],
     {ok, { {one_for_one, 10, 10}, Children } }.
