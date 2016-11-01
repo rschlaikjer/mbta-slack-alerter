@@ -92,9 +92,9 @@ send_alert(Color, Alert) ->
     {ok, BotIcon} = application:get_env(mbta, slack_bot_icon),
     Attachment = attachment_for_alert(Color, Alert),
     slack_alert(
-        <<"ross-slack-test">>,
-        <<"MBTA Bot">>,
-        <<":mbta:">>,
+        Channel,
+        BotName,
+        BotIcon,
         Attachment
     ),
     ok.
