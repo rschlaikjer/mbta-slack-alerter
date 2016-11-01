@@ -16,7 +16,7 @@
 
 -export([
     start_link/0,
-    force_poll/0
+    fetch_mbta_alerts/0
 ]).
 
 -record(state, {
@@ -26,9 +26,6 @@
 %% Gen server callbacks
 start_link() ->
     gen_server:start_link(?MODULE, [], []).
-
-force_poll() ->
-    gen_server:cast(?MODULE, heartbeat).
 
 init([]) ->
     lager:info("Starting MBTA poller"),
