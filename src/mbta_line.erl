@@ -135,7 +135,9 @@ get_translation(#translatedstring{translation=Translations}, Language) ->
     end.
 
 unix_seconds_to_datetime(Seconds) when is_integer(Seconds) ->
-    calendar:gregorian_seconds_to_datetime(Seconds + 62167219200);
+    calendar:universal_time_to_local_time(
+        calendar:gregorian_seconds_to_datetime(Seconds + 62167219200)
+    );
 unix_seconds_to_datetime(_) -> undefined.
 
 format_time({{Y, M, D}, {H, Mi, S}}) ->
