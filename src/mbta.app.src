@@ -10,8 +10,7 @@
                   jsx,
                   lager,
                   protobuffs,
-                  inets,
-                  pgapp
+                  inets
                  ]},
   {mod, { mbta_app, []}},
   {env, []}
