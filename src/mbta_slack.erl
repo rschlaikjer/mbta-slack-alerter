@@ -78,7 +78,6 @@ send_slack_attachment(Attachment) ->
     ]),
     Header = [],
     Type = "application/json",
-    lager:info("Slack: ~p~n" , [Json]),
     {ok, SlackUrl} = application:get_env(mbta, slack_url),
     {ok, {{_HttpVer, _Code, _Msg}, _ResponseHeaders, ResponseBody}} =
         httpc:request(post, {SlackUrl, Header, Type, Json}, [], []),
