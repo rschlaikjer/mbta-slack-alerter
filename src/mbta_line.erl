@@ -15,9 +15,6 @@
          terminate/2,
          code_change/3]).
 
--define(WATCHER_HEARTBEAT, 10000).
--define(TIMEOUT, 30000).
-
 -record(state, {line, color, ets}).
 
 start_link(Line, Color) when is_list(Line) ->
@@ -64,19 +61,20 @@ feed_entity_acked(Ets, #feedentity{id=Id}) ->
         _ -> true
     end.
 
-handle_feed_entity(#state{line=Line, ets=Ets, color=Color}, FeedEntity) ->
+handle_feed_entity(State=#state{line=Line, ets=Ets, color=Color}, FeedEntity) ->
     case feed_entity_acked(Ets, FeedEntity) of
         true -> ok;
         false ->
             ack_feedentity(Ets, FeedEntity),
-            check_and_alert(Line, Color, FeedEntity)
+            check_and_alert(State, FeedEntity)
     end.
 
-check_and_alert(Line, Color, FeedEntity) ->
+check_and_alert(State=#state{line=Line}, FeedEntity) ->
     Alert = FeedEntity#feedentity.alert,
+    AlertId = FeedEntity#feedentity.id,
     case alert_affects_route_id(Alert, Line) of
         false -> ok;
-        true -> send_alert(Color, Alert)
+        true -> send_alert(State, AlertId, Alert)
     end.
 
 alert_affects_route_id(Alert, RouteId) ->
@@ -86,18 +84,9 @@ alert_affects_route_id(Alert, RouteId) ->
         Entities
     ).
 
-send_alert(Color, Alert) ->
-    {ok, Channel} = application:get_env(mbta, slack_channel),
-    {ok, BotName} = application:get_env(mbta, slack_bot_name),
-    {ok, BotIcon} = application:get_env(mbta, slack_bot_icon),
+send_alert(#state{color=Color}, AlertId, Alert) ->
     Attachment = attachment_for_alert(Color, Alert),
-    slack_alert(
-        Channel,
-        BotName,
-        BotIcon,
-        Attachment
-    ),
-    ok.
+    gen_server:cast(mbta_slack, {send_alert, AlertId, Attachment}).
 
 attachment_for_alert(Color, Alert) ->
     Header = Alert#alert.header_text,
@@ -144,17 +133,3 @@ format_time({{Y, M, D}, {H, Mi, S}}) ->
     io_lib:format("~2..0b:~2..0b:~2..0b ~b/~2..0b/~2..0b", [H, Mi, S, Y, M, D]);
 format_time(_) ->
     "further notice".
-
-slack_alert(Channel, Username, Emoji, Attachment) ->
-    Json = jsx:encode([
-        {<<"channel">>, Channel},
-        {<<"username">>, Username},
-        {<<"icon_emoji">>, Emoji},
-        {<<"attachments">>, [Attachment]}
-    ]),
-    Header = [],
-    Type = "application/json",
-    {ok, SlackUrl} = application:get_env(mbta, slack_url),
-    {ok, {{_HttpVer, _Code, _Msg}, _ResponseHeaders, ResponseBody}} =
-        httpc:request(post, {SlackUrl, Header, Type, Json}, [], []),
-    erlang:iolist_to_binary(ResponseBody).

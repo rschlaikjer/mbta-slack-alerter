@@ -28,6 +28,14 @@ init([]) ->
         3000,
         worker,
         [mbta_poller]
+    },
+    {
+        mbta_slack,
+        {mbta_slack, start_link, []},
+        permanent,
+        3000,
+        worker,
+        [mbta_slack]
     }
     ],
     {ok, { {one_for_one, 10, 10}, Children } }.
