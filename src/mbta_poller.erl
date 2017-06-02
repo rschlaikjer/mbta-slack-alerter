@@ -1,6 +1,5 @@
 -module(mbta_poller).
 -behaviour(gen_server).
--compile([{parse_transform, lager_transform}]).
 -include_lib("mbta/include/gtfs_realtime_pb.hrl").
 
 -define(MBTA_ALERT_URL, "http://developer.mbta.com/lib/GTRTFS/Alerts/Alerts.pb").
@@ -60,12 +59,12 @@ code_change(OldVsn, State, _Extra) ->
 
 fetch_and_cast_alerts() ->
     Data = fetch_mbta_alerts(),
-    Entities = Data#feedmessage.entity,
+    Entities = Data#'FeedMessage'.entity,
     lists:map(fun mbta_line_sup:cast_entity_to_all/1, Entities).
 
 fetch_mbta_alerts() ->
     MbtaData = fetch_mbta_alert_protobuf(),
-    ParsedData = gtfs_realtime_pb:decode_feedmessage(MbtaData),
+    ParsedData = gtfs_realtime_pb:decode_msg(MbtaData, 'FeedMessage'),
     ParsedData.
 
 fetch_mbta_alert_protobuf() ->

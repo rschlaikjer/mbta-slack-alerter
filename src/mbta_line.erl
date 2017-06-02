@@ -1,7 +1,6 @@
 -module(mbta_line).
 -behaviour(gen_server).
 -include_lib("mbta/include/gtfs_realtime_pb.hrl").
--compile([{parse_transform, lager_transform}]).
 
 -export([
     start_link/2
@@ -52,10 +51,10 @@ code_change(OldVsn, State, _Extra) ->
 init_ets() ->
     ets:new(acked_alerts, [set]).
 
-ack_feedentity(Ets, #feedentity{id=Id}) ->
+ack_feedentity(Ets, #'FeedEntity'{id=Id}) ->
     ets:insert(Ets, {Id, true}).
 
-feed_entity_acked(Ets, #feedentity{id=Id}) ->
+feed_entity_acked(Ets, #'FeedEntity'{id=Id}) ->
     case ets:lookup(Ets, Id) of
         [] -> false;
         _ -> true
@@ -70,17 +69,17 @@ handle_feed_entity(State=#state{line=Line, ets=Ets, color=Color}, FeedEntity) ->
     end.
 
 check_and_alert(State=#state{line=Line}, FeedEntity) ->
-    Alert = FeedEntity#feedentity.alert,
-    AlertId = FeedEntity#feedentity.id,
+    Alert = FeedEntity#'FeedEntity'.alert,
+    AlertId = FeedEntity#'FeedEntity'.id,
     case alert_affects_route_id(Alert, Line) of
         false -> ok;
         true -> send_alert(State, AlertId, Alert)
     end.
 
 alert_affects_route_id(Alert, RouteId) ->
-    Entities = Alert#alert.informed_entity,
+    Entities = Alert#'Alert'.informed_entity,
     lists:any(
-        fun(Entity) -> Entity#entityselector.route_id == RouteId end,
+        fun(Entity) -> Entity#'EntitySelector'.route_id == RouteId end,
         Entities
     ).
 
@@ -89,15 +88,15 @@ send_alert(#state{color=Color}, AlertId, Alert) ->
     gen_server:cast(mbta_slack, {send_alert, AlertId, Attachment}).
 
 attachment_for_alert(Color, Alert) ->
-    Header = Alert#alert.header_text,
-    Description = Alert#alert.description_text,
-    Timerange = hd(Alert#alert.active_period),
+    Header = Alert#'Alert'.header_text,
+    Description = Alert#'Alert'.description_text,
+    Timerange = hd(Alert#'Alert'.active_period),
     AlertText = io_lib:format(
         "Alert! ~s until ~s. Cause: ~s.~n~s~n",
         [
             get_translation(Header, "en"),
-            format_time(unix_seconds_to_datetime(Timerange#timerange.'end')),
-            Alert#alert.cause,
+            format_time(unix_seconds_to_datetime(Timerange#'TimeRange'.'end')),
+            Alert#'Alert'.cause,
             get_translation(Description, "en")
         ]
     ),
@@ -107,19 +106,19 @@ attachment_for_alert(Color, Alert) ->
         {<<"title">>, erlang:list_to_binary(io_lib:format(
             "Alert! ~s until ~s. Cause: ~s", [
                 get_translation(Header, "en"),
-                format_time(unix_seconds_to_datetime(Timerange#timerange.'end')),
-                Alert#alert.cause
+                format_time(unix_seconds_to_datetime(Timerange#'TimeRange'.'end')),
+                Alert#'Alert'.cause
             ]))
         },
         {<<"text">>, erlang:list_to_binary(get_translation(Description, "en"))}
     ].
 
-get_translation(#translatedstring{translation=Translations}, Language) ->
+get_translation(#'TranslatedString'{translation=Translations}, Language) ->
     case lists:filter(
-        fun(Translation) -> Translation#translatedstring_translation.language == Language end,
+        fun(Translation) -> Translation#'TranslatedString.Translation'.language == Language end,
         Translations
     ) of
-        [Translation] -> Translation#translatedstring_translation.text;
+        [Translation] -> Translation#'TranslatedString.Translation'.text;
         _ -> undefined
     end.
 

@@ -1,7 +1,6 @@
 -module(mbta_line_sup).
 -behaviour(supervisor).
 
--compile([{parse_transform, lager_transform}]).
 -include_lib("mbta/include/gtfs_realtime_pb.hrl").
 
 -export([start_link/0]).
@@ -11,7 +10,7 @@
 start_link() ->
   supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
-cast_entity_to_all(Entity=#feedentity{}) ->
+cast_entity_to_all(Entity=#'FeedEntity'{}) ->
     ChildPids = [Pid || {_, Pid, _, _} <- supervisor:which_children(mbta_line_sup)],
     lists:map(
         fun(ChildPid) -> gen_server:cast(ChildPid, {entity, Entity}) end,

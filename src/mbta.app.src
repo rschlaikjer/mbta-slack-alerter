@@ -9,7 +9,6 @@
                   sasl,
                   jsx,
                   lager,
-                  protobuffs,
                   inets,
                   raven,
                   estatsd
