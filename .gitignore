@@ -8,3 +8,5 @@ _build/
 log/
 rebar.lock
 files/app.config
+include/gtfs_realtime_pb.hrl
+src/gtfs_realtime_pb.erl
