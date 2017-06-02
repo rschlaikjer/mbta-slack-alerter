@@ -17,6 +17,8 @@
 -record(state, {line, color, ets}).
 
 start_link(Line, Color) when is_list(Line) ->
+    start_link(list_to_binary(Line), Color);
+start_link(Line, Color) when is_binary(Line) ->
     gen_server:start_link(?MODULE, [Line, Color], []).
 
 init([Line, Color]) ->
@@ -110,7 +112,7 @@ attachment_for_alert(Color, Alert) ->
                 Alert#'Alert'.cause
             ]))
         },
-        {<<"text">>, erlang:list_to_binary(get_translation(Description, "en"))}
+        {<<"text">>, get_translation(Description, <<"en">>)}
     ].
 
 get_translation(#'TranslatedString'{translation=Translations}, Language) ->
