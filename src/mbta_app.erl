@@ -11,7 +11,6 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-    mbta:compile_protobuf(),
     {ok, Pid} = mbta_sup:start_link(),
     {ok, LinesToStart} = application:get_env(mbta, watched_lines),
     lists:map(

@@ -10,7 +10,9 @@
                   jsx,
                   lager,
                   protobuffs,
-                  inets
+                  inets,
+                  raven,
+                  estatsd
                  ]},
   {mod, { mbta_app, []}},
   {env, []}
