@@ -96,10 +96,10 @@ attachment_for_alert(Color, Alert) ->
     AlertText = io_lib:format(
         "Alert! ~s until ~s. Cause: ~s.~n~s~n",
         [
-            get_translation(Header, "en"),
+            get_translation(Header, <<"en">>),
             format_time(unix_seconds_to_datetime(Timerange#'TimeRange'.'end')),
             Alert#'Alert'.cause,
-            get_translation(Description, "en")
+            get_translation(Description, <<"en">>)
         ]
     ),
     [
@@ -107,7 +107,7 @@ attachment_for_alert(Color, Alert) ->
         {<<"color">>, Color},
         {<<"title">>, erlang:list_to_binary(io_lib:format(
             "Alert! ~s until ~s. Cause: ~s", [
-                get_translation(Header, "en"),
+                get_translation(Header, <<"en">>),
                 format_time(unix_seconds_to_datetime(Timerange#'TimeRange'.'end')),
                 Alert#'Alert'.cause
             ]))
